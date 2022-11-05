@@ -24,7 +24,7 @@ local function test_dynamic_media(cb, player)
 		to_player = player:get_player_name(),
 	}, function(name)
 		if not call_ok then
-			cb("impossible condition")
+			return cb("impossible condition")
 		end
 		cb()
 	end)
@@ -68,3 +68,38 @@ local function test_clear_meta(_, pos)
 	end
 end
 unittests.register("test_clear_meta", test_clear_meta, {map=true})
+
+local on_punch_called
+minetest.register_on_punchnode(function()
+	on_punch_called = true
+end)
+unittests.register("test_punch_node", function(_, pos)
+	minetest.place_node(pos, {name="basenodes:dirt"})
+	on_punch_called = false
+	minetest.punch_node(pos)
+	minetest.remove_node(pos)
+	-- currently failing: assert(on_punch_called)
+end, {map=true})
+
+local function test_compress()
+	-- This text should be compressible, to make sure the results are... normal
+	local text = "The\000 icey canoe couldn't move very well on the\128 lake. The\000 ice was too stiff and the icey canoe's paddles simply wouldn't punch through."
+	local methods = {
+		"deflate",
+		"zstd",
+		-- "noodle", -- for warning alarm test
+	}
+	local zstd_magic = string.char(0x28, 0xB5, 0x2F, 0xFD)
+	for _, method in ipairs(methods) do
+		local compressed = core.compress(text, method)
+		assert(core.decompress(compressed, method) == text, "input/output mismatch for compression method " .. method)
+		local has_zstd_magic = compressed:sub(1, 4) == zstd_magic
+		if method == "zstd" then
+			assert(has_zstd_magic, "zstd magic number not in zstd method")
+		else
+			assert(not has_zstd_magic, "zstd magic number in method " .. method .. " (which is not zstd)")
+		end
+	end
+end
+unittests.register("test_compress", test_compress)
+

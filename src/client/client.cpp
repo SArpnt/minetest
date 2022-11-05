@@ -58,6 +58,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "game.h"
 #include "chatmessage.h"
 #include "translation.h"
+#include "content/mod_configuration.h"
 
 extern gui::IGUIEnvironment* guienv;
 
@@ -118,6 +119,7 @@ Client::Client(
 	m_particle_manager(&m_env),
 	m_con(new con::Connection(PROTOCOL_ID, 512, CONNECTION_TIMEOUT, ipv6, this)),
 	m_address_name(address_name),
+	m_allow_login_or_register(allow_login_or_register),
 	m_server_ser_ver(SER_FMT_VER_INVALID),
 	m_last_chat_message_sent(time(NULL)),
 	m_password(password),
@@ -125,8 +127,7 @@ Client::Client(
 	m_media_downloader(new ClientMediaDownloader()),
 	m_state(LC_Created),
 	m_game_ui(game_ui),
-	m_modchannel_mgr(new ModChannelMgr()),
-	m_allow_login_or_register(allow_login_or_register)
+	m_modchannel_mgr(new ModChannelMgr())
 {
 	// Add local player
 	m_env.setLocalPlayer(new LocalPlayer(this, playername));
@@ -195,12 +196,28 @@ void Client::loadMods()
 	// Load builtin
 	scanModIntoMemory(BUILTIN_MOD_NAME, getBuiltinLuaPath());
 	m_script->loadModFromMemory(BUILTIN_MOD_NAME);
+	m_script->checkSetByBuiltin();
 
-	ClientModConfiguration modconf(getClientModsLuaPath());
+	ModConfiguration modconf;
+	{
+		std::unordered_map<std::string, std::string> paths;
+		std::string path_user = porting::path_user + DIR_DELIM + "clientmods";
+		const auto modsPath = getClientModsLuaPath();
+		if (modsPath != path_user) {
+			paths["share"] = modsPath;
+		}
+		paths["mods"] = path_user;
+
+		std::string settings_path = path_user + DIR_DELIM + "mods.conf";
+		modconf.addModsFromConfig(settings_path, paths);
+		modconf.checkConflictsAndDeps();
+	}
+
 	m_mods = modconf.getMods();
+
 	// complain about mods with unsatisfied dependencies
 	if (!modconf.isConsistent()) {
-		modconf.printUnsatisfiedModsError();
+		errorstream << modconf.getUnsatisfiedModsError() << std::endl;
 		return;
 	}
 
@@ -424,7 +441,7 @@ void Client::step(float dtime)
 	if(m_map_timer_and_unload_interval.step(dtime, map_timer_and_unload_dtime)) {
 		std::vector<v3s16> deleted_blocks;
 		m_env.getMap().timerUpdate(map_timer_and_unload_dtime,
-			g_settings->getFloat("client_unload_unused_data_timeout"),
+			std::max(g_settings->getFloat("client_unload_unused_data_timeout"), 0.0f),
 			g_settings->getS32("client_mapblock_limit"),
 			&deleted_blocks);
 
@@ -559,7 +576,8 @@ void Client::step(float dtime)
 					else {
 						// Replace with the new mesh
 						block->mesh = r.mesh;
-						force_update_shadows = true;
+						if (r.urgent)
+							force_update_shadows = true;
 					}
 				}
 			} else {
@@ -1254,7 +1272,7 @@ void Client::sendChatMessage(const std::wstring &message)
 		pkt << message;
 
 		Send(&pkt);
-	} else if (m_out_chat_queue.size() < (u16) max_queue_size || max_queue_size == -1) {
+	} else if (m_out_chat_queue.size() < (u16) max_queue_size || max_queue_size < 0) {
 		m_out_chat_queue.push(message);
 	} else {
 		infostream << "Could not queue chat message because maximum out chat queue size ("
@@ -1972,26 +1990,6 @@ const std::string* Client::getModFile(std::string filename)
 	if (it == m_mod_vfs.end())
 		return nullptr;
 	return &it->second;
-}
-
-bool Client::registerModStorage(ModMetadata *storage)
-{
-	if (m_mod_storages.find(storage->getModName()) != m_mod_storages.end()) {
-		errorstream << "Unable to register same mod storage twice. Storage name: "
-				<< storage->getModName() << std::endl;
-		return false;
-	}
-
-	m_mod_storages[storage->getModName()] = storage;
-	return true;
-}
-
-void Client::unregisterModStorage(const std::string &name)
-{
-	std::unordered_map<std::string, ModMetadata *>::const_iterator it =
-		m_mod_storages.find(name);
-	if (it != m_mod_storages.end())
-		m_mod_storages.erase(name);
 }
 
 /*

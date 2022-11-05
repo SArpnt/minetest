@@ -94,7 +94,7 @@ local function get_formspec(tabview, name, tabdata)
 		-- Name / Password
 		"container[0,4.8]" ..
 		"label[0.25,0;" .. fgettext("Name") .. "]" ..
-		"label[3,0;" .. fgettext("Password") .. "]" ..
+		"label[2.875,0;" .. fgettext("Password") .. "]" ..
 		"field[0.25,0.2;2.625,0.75;te_name;;" .. core.formspec_escape(core.settings:get("name")) .. "]" ..
 		"pwdfield[2.875,0.2;2.625,0.75;te_pwd;]" ..
 		"container_end[]" ..
@@ -110,8 +110,8 @@ local function get_formspec(tabview, name, tabdata)
 		if gamedata.fav then
 			retval = retval .. "tooltip[btn_delete_favorite;" .. fgettext("Remove favorite") .. "]"
 			retval = retval .. "style[btn_delete_favorite;padding=6]"
-			retval = retval .. "image_button[5,1.3;0.5,0.5;" .. defaulttexturedir ..
-				"server_favorite_delete.png;btn_delete_favorite;]"
+			retval = retval .. "image_button[5,1.3;0.5,0.5;" .. core.formspec_escape(defaulttexturedir ..
+				"server_favorite_delete.png") .. ";btn_delete_favorite;]"
 		end
 		if gamedata.serverdescription then
 			retval = retval .. "textarea[0.25,1.85;5.2,2.75;;;" ..

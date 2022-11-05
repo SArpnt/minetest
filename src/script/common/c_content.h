@@ -42,6 +42,7 @@ extern "C" {
 // We do a explicit path include because by default c_content.h include src/client/hud.h
 // prior to the src/hud.h, which is not good on server only build
 #include "../../hud.h"
+#include "content/mods.h"
 
 namespace Json { class Value; }
 
@@ -128,10 +129,8 @@ void               read_inventory_list       (lua_State *L, int tableindex,
                                               Inventory *inv, const char *name,
                                               IGameDef *gdef, int forcesize=-1);
 
-MapNode            readnode                  (lua_State *L, int index,
-                                              const NodeDefManager *ndef);
-void               pushnode                  (lua_State *L, const MapNode &n,
-                                              const NodeDefManager *ndef);
+MapNode            readnode                  (lua_State *L, int index);
+void               pushnode                  (lua_State *L, const MapNode &n);
 
 
 void               read_groups               (lua_State *L, int index,
@@ -204,3 +203,5 @@ void push_hud_element          (lua_State *L, HudElement *elem);
 bool read_hud_change           (lua_State *L, HudElementStat &stat, HudElement *elem, void **value);
 
 void push_collision_move_result(lua_State *L, const collisionMoveResult &res);
+
+void push_mod_spec(lua_State *L, const ModSpec &spec, bool include_unsatisfied);

@@ -377,10 +377,6 @@ void MapblockMeshGenerator::drawAutoLightedCuboid(aabb3f box, const f32 *txc,
 	f32 dx2 = box.MaxEdge.X;
 	f32 dy2 = box.MaxEdge.Y;
 	f32 dz2 = box.MaxEdge.Z;
-
-	box.MinEdge += origin;
-	box.MaxEdge += origin;
-
 	if (scale) {
 		if (!txc) { // generate texture coords before scaling
 			generateCuboidTextureCoords(box, texture_coord_buf);
@@ -389,11 +385,12 @@ void MapblockMeshGenerator::drawAutoLightedCuboid(aabb3f box, const f32 *txc,
 		box.MinEdge *= f->visual_scale;
 		box.MaxEdge *= f->visual_scale;
 	}
+	box.MinEdge += origin;
+	box.MaxEdge += origin;
 	if (!txc) {
 		generateCuboidTextureCoords(box, texture_coord_buf);
 		txc = texture_coord_buf;
 	}
-
 	if (!tiles) {
 		tiles = &tile;
 		tile_count = 1;
@@ -475,7 +472,7 @@ void MapblockMeshGenerator::prepareLiquidNodeDrawing()
 		// it at what it emits, for an increased effect
 		u8 e = decode_light(f->light_source);
 		light = LightPair(std::max(e, light.lightDay), std::max(e, light.lightNight));
-	} else if (nodedef->get(ntop).param_type == CPT_LIGHT) {
+	} else if (nodedef->getLightingFlags(ntop).has_light) {
 		// Otherwise, use the light of the node on top if possible
 		light = LightPair(getInteriorLight(ntop, 0, nodedef));
 	}
@@ -1134,7 +1131,7 @@ void MapblockMeshGenerator::drawPlantlikeRootedNode()
 		getSmoothLightFrame();
 	} else {
 		MapNode ntop = data->m_vmanip.getNodeNoEx(blockpos_nodes + p);
-		light = LightPair(getInteriorLight(ntop, 1, nodedef));
+		light = LightPair(getInteriorLight(ntop, 0, nodedef));
 	}
 	drawPlantlike(true);
 	p.Y--;
@@ -1513,7 +1510,9 @@ void MapblockMeshGenerator::drawMeshNode()
 	int degrotate = 0;
 
 	if (f->param_type_2 == CPT2_FACEDIR ||
-			f->param_type_2 == CPT2_COLORED_FACEDIR) {
+			f->param_type_2 == CPT2_COLORED_FACEDIR ||
+			f->param_type_2 == CPT2_4DIR ||
+			f->param_type_2 == CPT2_COLORED_4DIR) {
 		facedir = n.getFaceDir(nodedef);
 	} else if (f->param_type_2 == CPT2_WALLMOUNTED ||
 			f->param_type_2 == CPT2_COLORED_WALLMOUNTED) {
@@ -1595,7 +1594,7 @@ void MapblockMeshGenerator::drawNode()
 	if (data->m_smooth_lighting)
 		getSmoothLightFrame();
 	else
-		light = LightPair(getInteriorLight(n, 1, nodedef));
+		light = LightPair(getInteriorLight(n, 0, nodedef));
 	switch (f->drawtype) {
 		case NDT_FLOWINGLIQUID:     drawLiquidNode(); break;
 		case NDT_GLASSLIKE:         drawGlasslikeNode(); break;

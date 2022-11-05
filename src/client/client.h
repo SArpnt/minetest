@@ -349,7 +349,6 @@ public:
 	u16 getProtoVersion()
 	{ return m_proto_ver; }
 
-	ELoginRegister m_allow_login_or_register = ELoginRegister::Any;
 	bool m_simple_singleplayer_mode;
 
 	float mediaReceiveProgress();
@@ -383,9 +382,6 @@ public:
 	virtual scene::IAnimatedMesh* getMesh(const std::string &filename, bool cache = false);
 	const std::string* getModFile(std::string filename);
 	ModMetadataDatabase *getModStorageDatabase() override { return m_mod_storage_database; }
-
-	bool registerModStorage(ModMetadata *meta) override;
-	void unregisterModStorage(const std::string &name) override;
 
 	// Migrates away old files-based mod storage if necessary
 	void migrateModStorage();
@@ -492,6 +488,7 @@ private:
 	ParticleManager m_particle_manager;
 	std::unique_ptr<con::Connection> m_con;
 	std::string m_address_name;
+	ELoginRegister m_allow_login_or_register = ELoginRegister::Any;
 	Camera *m_camera = nullptr;
 	Minimap *m_minimap = nullptr;
 	bool m_minimap_disabled_by_server = false;
@@ -593,7 +590,6 @@ private:
 
 	// Client modding
 	ClientScripting *m_script = nullptr;
-	std::unordered_map<std::string, ModMetadata *> m_mod_storages;
 	ModMetadataDatabase *m_mod_storage_database = nullptr;
 	float m_mod_storage_save_timer = 10.0f;
 	std::vector<ModSpec> m_mods;

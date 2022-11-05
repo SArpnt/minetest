@@ -98,15 +98,15 @@ Where each location is on each platform:
 * Windows installed:
     * `bin`   = `C:\Program Files\Minetest\bin (Depends on the install location)`
     * `share` = `C:\Program Files\Minetest (Depends on the install location)`
-    * `user`  = `%APPDATA%\Minetest`
+    * `user`  = `%APPDATA%\Minetest` or `%MINETEST_USER_PATH%`
 * Linux installed:
     * `bin`   = `/usr/bin`
     * `share` = `/usr/share/minetest`
-    * `user`  = `~/.minetest`
+    * `user`  = `~/.minetest` or `$MINETEST_USER_PATH`
 * macOS:
     * `bin`   = `Contents/MacOS`
     * `share` = `Contents/Resources`
-    * `user`  = `Contents/User OR ~/Library/Application Support/minetest`
+    * `user`  = `Contents/User` or `~/Library/Application Support/minetest` or `$MINETEST_USER_PATH`
 
 Worlds can be found as separate folders in: `user/worlds/`
 
@@ -144,19 +144,19 @@ Compiling
 
 For Debian/Ubuntu users:
 
-    sudo apt install g++ make libc6-dev cmake libpng-dev libjpeg-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-gnutls-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev libzstd-dev libluajit-5.1-dev
+    sudo apt install g++ make libc6-dev cmake libpng-dev libjpeg-dev libxi-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libcurl4-gnutls-dev libfreetype6-dev zlib1g-dev libgmp-dev libjsoncpp-dev libzstd-dev libluajit-5.1-dev
 
 For Fedora users:
 
-    sudo dnf install make automake gcc gcc-c++ kernel-devel cmake libcurl-devel openal-soft-devel libvorbis-devel libXxf86vm-devel libogg-devel freetype-devel mesa-libGL-devel zlib-devel jsoncpp-devel gmp-devel sqlite-devel luajit-devel leveldb-devel ncurses-devel spatialindex-devel libzstd-devel
+    sudo dnf install make automake gcc gcc-c++ kernel-devel cmake libcurl-devel openal-soft-devel libvorbis-devel libXi-devel libogg-devel freetype-devel mesa-libGL-devel zlib-devel jsoncpp-devel gmp-devel sqlite-devel luajit-devel leveldb-devel ncurses-devel spatialindex-devel libzstd-devel
 
 For Arch users:
 
-    sudo pacman -S base-devel libcurl-gnutls cmake libxxf86vm libpng sqlite libogg libvorbis openal freetype2 jsoncpp gmp luajit leveldb ncurses zstd
+    sudo pacman -S base-devel libcurl-gnutls cmake libxi libpng sqlite libogg libvorbis openal freetype2 jsoncpp gmp luajit leveldb ncurses zstd
 
 For Alpine users:
 
-    sudo apk add build-base cmake libpng-dev jpeg-dev libxxf86vm-dev mesa-dev sqlite-dev libogg-dev libvorbis-dev openal-soft-dev curl-dev freetype-dev zlib-dev gmp-dev jsoncpp-dev luajit-dev zstd-dev
+    sudo apk add build-base cmake libpng-dev jpeg-dev libxi-dev mesa-dev sqlite-dev libogg-dev libvorbis-dev openal-soft-dev curl-dev freetype-dev zlib-dev gmp-dev jsoncpp-dev luajit-dev zstd-dev
 
 #### Download
 
@@ -261,6 +261,7 @@ General options and their default values:
     ENABLE_SYSTEM_GMP=ON       - Use GMP from system (much faster than bundled mini-gmp)
     ENABLE_SYSTEM_JSONCPP=ON   - Use JsonCPP from system
     RUN_IN_PLACE=FALSE         - Create a portable install (worlds, settings etc. in current directory)
+    ENABLE_UPDATE_CHECKER=TRUE - Whether to enable update checks by default
     USE_GPROF=FALSE            - Enable profiling using GProf
     VERSION_EXTRA=             - Text to append to version (e.g. VERSION_EXTRA=foobar -> Minetest 0.4.9-foobar)
     ENABLE_TOUCH=FALSE         - Enable Touchscreen support (requires support by IrrlichtMt)
@@ -278,9 +279,10 @@ Library specific options:
     FREETYPE_LIBRARY                - Path to libfreetype.a/libfreetype.so/freetype.lib
     FREETYPE_DLL                    - Only on Windows; path to libfreetype-6.dll
     GETTEXT_DLL                     - Only when building with gettext on Windows; paths to libintl + libiconv DLLs
-    GETTEXT_INCLUDE_DIR             - Only when building with gettext; directory that contains iconv.h
-    GETTEXT_LIBRARY                 - Only when building with gettext on Windows; path to libintl.dll.a
+    GETTEXT_INCLUDE_DIR             - Only when building with gettext; directory that contains libintl.h
+    GETTEXT_LIBRARY                 - Optional/platform-dependent with gettext; path to libintl.so/libintl.dll.a
     GETTEXT_MSGFMT                  - Only when building with gettext; path to msgfmt/msgfmt.exe
+    ICONV_LIBRARY                   - Optional/platform-dependent; path to libiconv.so/libiconv.dylib
     IRRLICHT_DLL                    - Only on Windows; path to IrrlichtMt.dll
     IRRLICHT_INCLUDE_DIR            - Directory that contains IrrCompileConfig.h (usable for server build only)
     LEVELDB_INCLUDE_DIR             - Only when building with LevelDB; directory that contains db.h
